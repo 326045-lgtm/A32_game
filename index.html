@@ -195,6 +195,14 @@
             transform: scale(1.05);
         }
 
+        #restart-story-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 110;
+            display: none;
+        }
+
     </style>
 </head>
 <body>
@@ -207,6 +215,7 @@
         <div id="name-box"></div>
         <div id="text-box"></div>
     </div>
+    <button id="restart-story-btn" class="finish-btn" onclick="restartStory()">もう一度はじめる</button>
 
     <!-- 詩作成ミニゲームレイヤー -->
     <div id="poem-game-layer">
@@ -345,12 +354,14 @@ let poemScores = { "route_sayuri": 0, "route_natsumi": 0, "route_yurika": 0 };
 const textBox = document.getElementById('text-box');
 const nameBox = document.getElementById('name-box');
 const characterLayer = document.getElementById('character-layer');
+const restartStoryBtn = document.getElementById('restart-story-btn');
 
 function showLine() {
     const line = scenario[currentScene][currentLineIndex];
     if (!line) return;
 
     clearInterval(currentTextInterval);
+    restartStoryBtn.style.display = 'none';
     textBox.innerHTML = "";
     isTyping = true;
     
@@ -404,6 +415,7 @@ function showLine() {
         if (charIndex >= fullText.length) {
             clearInterval(currentTextInterval);
             isTyping = false;
+            updateRestartButton();
         }
     }, 40); // 文字送りスピード
 }
@@ -414,13 +426,38 @@ function nextLine() {
         clearInterval(currentTextInterval);
         textBox.innerHTML = fullText;
         isTyping = false;
+        updateRestartButton();
         return;
     }
 
+    if (currentLineIndex >= scenario[currentScene].length - 1) return;
     currentLineIndex++;
     if (currentLineIndex < scenario[currentScene].length) {
         showLine();
     }
+}
+
+function updateRestartButton() {
+    const atEnding = currentScene !== 'start' &&
+        currentLineIndex === scenario[currentScene].length - 1 && !isTyping;
+    restartStoryBtn.style.display = atEnding ? 'block' : 'none';
+}
+
+function restartStory() {
+    clearInterval(currentTextInterval);
+    currentTextInterval = null;
+    isTyping = false;
+    fullText = '';
+    currentScene = 'start';
+    currentLineIndex = 0;
+    poemWordsLeft = 7;
+    selectedWords = [];
+    poemScores = { "route_sayuri": 0, "route_natsumi": 0, "route_yurika": 0 };
+    characterLayer.innerHTML = '';
+    document.getElementById('poem-game-layer').style.display = 'none';
+    document.getElementById('poem-result-layer').style.display = 'none';
+    document.getElementById('ui-layer').style.display = 'block';
+    showLine();
 }
 
 // =======================
